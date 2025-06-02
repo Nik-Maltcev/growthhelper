@@ -43,6 +43,7 @@ export const LobeOpenAI = createOpenAICompatibleRuntime({
   },
   debug: {
     chatCompletion: () => process.env.DEBUG_OPENAI_CHAT_COMPLETION === '1',
+    responses: () => process.env.DEBUG_OPENAI_RESPONSES === '1',
   },
   models: async ({ client }) => {
     const { LOBE_DEFAULT_MODEL_LIST } = await import('@/config/aiModels');
