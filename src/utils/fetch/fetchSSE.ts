@@ -1,9 +1,8 @@
-
 import { MESSAGE_CANCEL_FLAT } from '@/const/message';
 import { LOBE_CHAT_OBSERVATION_ID, LOBE_CHAT_TRACE_ID } from '@/const/trace';
 import { parseToolCalls } from '@/libs/model-runtime';
 import { ChatErrorType } from '@/types/fetch';
-import { ResponseAnimation } from '@/types/llm';
+import { ResponseAnimation, ResponseAnimationStyle } from '@/types/llm';
 import {
   ChatMessageError,
   MessageToolCall,
@@ -19,7 +18,6 @@ import { nanoid } from '@/utils/uuid';
 
 import { fetchEventSource } from './fetchEventSource';
 import { getMessageError } from './parseError';
-import { standardizeAnimationStyle } from '@/services/chat';
 
 type SSEFinishType = 'done' | 'error' | 'abort';
 
@@ -92,7 +90,7 @@ export interface FetchSSEOptions {
       | MessageBase64ImageChunk
       | MessageSpeedChunk,
   ) => void;
-  responseAnimation?: ResponseAnimation
+  responseAnimation?: ResponseAnimation;
 }
 
 const START_ANIMATION_SPEED = 10; // 默认起始速度
@@ -302,6 +300,14 @@ const createSmoothToolCalls = (params: {
   };
 };
 
+export const standardizeAnimationStyle = (
+  animationStyle?: ResponseAnimation,
+): Exclude<ResponseAnimation, ResponseAnimationStyle> => {
+  return typeof animationStyle === 'object'
+    ? animationStyle
+    : { text: animationStyle, toolsCalling: animationStyle };
+};
+
 /**
  * Fetch data using stream method
  */
@@ -313,7 +319,11 @@ export const fetchSSE = async (url: string, options: RequestInit & FetchSSEOptio
   let finishedType: SSEFinishType = 'done';
   let response!: Response;
 
-  const { text, toolsCalling, speed: smoothingSpeed } = standardizeAnimationStyle(options.responseAnimation ?? {});
+  const {
+    text,
+    toolsCalling,
+    speed: smoothingSpeed,
+  } = standardizeAnimationStyle(options.responseAnimation ?? {});
   const shouldSkipTextProcessing = text === 'none';
   const textSmoothing = text === 'smooth';
   const toolsCallingSmoothing = toolsCalling === 'smooth';
@@ -392,14 +402,14 @@ export const fetchSSE = async (url: string, options: RequestInit & FetchSSEOptio
           error.type
             ? error
             : {
-              body: {
+                body: {
+                  message: error.message,
+                  name: error.name,
+                  stack: error.stack,
+                },
                 message: error.message,
-                name: error.name,
-                stack: error.stack,
+                type: ChatErrorType.UnknownChatFetchError,
               },
-              message: error.message,
-              type: ChatErrorType.UnknownChatFetchError,
-            },
         );
         return;
       }
