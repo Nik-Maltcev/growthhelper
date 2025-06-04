@@ -502,6 +502,7 @@ const openrouterChatModels: AIChatModelCard[] = [
   {
     abilities: {
       reasoning: true,
+      functionCall: true,
     },
     contextWindowTokens: 163_840,
     description:
@@ -518,6 +519,7 @@ const openrouterChatModels: AIChatModelCard[] = [
   {
     abilities: {
       reasoning: true,
+      functionCall: true,
     },
     contextWindowTokens: 163_840,
     description:
